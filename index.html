@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Watch Time Helper</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        header {
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+        }
+        main {
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        input[type="url"] {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        button {
+            padding: 0.7rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .video-list {
+            margin-top: 2rem;
+        }
+        iframe {
+            width: 100%;
+            height: 315px;
+            border: none;
+            margin-bottom: 1rem;
+        }
+        .number-buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .number-buttons button {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>YouTube Watch Time Helper</h1>
+    </header>
+    <main>
+        <h2>Submit Your Video Link</h2>
+        <form id="videoForm">
+            <input type="url" id="videoUrl" placeholder="Paste YouTube video link here" required>
+            <button type="submit">Add Video</button>
+        </form>
+        
+        <div class="number-buttons">
+            <button onclick="addMultipleVideos(10)">Add 10 Videos</button>
+            <button onclick="addMultipleVideos(50)">Add 50 Videos</button>
+            <button onclick="addMultipleVideos(70)">Add 70 Videos</button>
+            <button onclick="addMultipleVideos(100)">Add 100 Videos</button>
+        </div>
+
+        <div class="video-list" id="videoList">
+            <h3>Your Videos</h3>
+        </div>
+    </main>
+
+    <script>
+        const videoForm = document.getElementById('videoForm');
+        const videoUrl = document.getElementById('videoUrl');
+        const videoList = document.getElementById('videoList');
+
+        let currentIframe = null;
+
+        videoForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const url = videoUrl.value.trim();
+            const videoId = extractVideoId(url);
+
+            if (videoId) {
+                addVideo(videoId);
+                videoUrl.value = ''; // Clear input
+            } else {
+                alert('Invalid YouTube URL. Please try again.');
+            }
+        });
+
+        function extractVideoId(url) {
+            const regex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&\s]+)|youtu\.be\/([^?\s]+)/;
+            const match = url.match(regex);
+            return match ? match[1] || match[2] : null;
+        }
+
+        function addVideo(videoId) {
+            // Pause previous video if there's one
+            if (currentIframe) {
+                currentIframe.src = currentIframe.src; // Stop the video
+            }
+
+            // Create new iframe for the video with low quality
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&vq=small`;
+            iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+            iframe.allowFullscreen = true;
+
+            // Add the iframe to the video list
+            videoList.appendChild(iframe);
+
+            // Store the current iframe for future pause action
+            currentIframe = iframe;
+
+            // Pause video when the tab becomes inactive
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    pauseVideo();
+                } else {
+                    resumeVideo();
+                }
+            });
+        }
+
+        function pauseVideo() {
+            if (currentIframe) {
+                currentIframe.src = currentIframe.src; // Pauses video
+            }
+        }
+
+        function resumeVideo() {
+            if (currentIframe) {
+                currentIframe.src += "&autoplay=1"; // Resumes the video
+            }
+        }
+
+        // Function to add multiple videos
+        function addMultipleVideos(count) {
+            const url = videoUrl.value.trim();
+            const videoId = extractVideoId(url);
+            
+            if (videoId) {
+                for (let i = 0; i < count; i++) {
+                    addVideo(videoId);
+                }
+                videoUrl.value = ''; // Clear input
+            } else {
+                alert('Invalid YouTube URL. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>

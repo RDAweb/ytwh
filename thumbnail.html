@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thumbnail Creator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        header {
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+        }
+        main {
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        button, select, input[type="text"], input[type="file"] {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .thumbnail-preview {
+            margin-top: 2rem;
+            text-align: center;
+            position: relative;
+        }
+        .thumbnail-preview canvas {
+            width: 100%;
+            max-width: 320px;
+            margin: 10px 0;
+        }
+        .text-control {
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Thumbnail Creator</h1>
+    </header>
+    <main>
+        <h2>Create Your Thumbnail</h2>
+        <form id="thumbnailForm">
+            <label for="template">Choose a Template:</label>
+            <select id="template">
+                <option value="template1.jpg">Template 1</option>
+                <option value="template2.jpg">Template 2</option>
+                <option value="template3.jpg">Template 3</option>
+            </select>
+
+            <label for="overlayText">Add Text to Thumbnail:</label>
+            <input type="text" id="overlayText" placeholder="Enter text for the thumbnail">
+
+            <label for="textColor">Choose Text Color:</label>
+            <select id="textColor">
+                <option value="white">White</option>
+                <option value="yellow">Yellow</option>
+                <option value="red">Red</option>
+                <option value="blue">Blue</option>
+                <option value="green">Green</option>
+            </select>
+
+            <label for="fontSize">Font Size (px):</label>
+            <input type="number" id="fontSize" value="30" min="10" max="100">
+
+            <label for="uploadImage">Upload Your Image:</label>
+            <input type="file" id="uploadImage" accept="image/*">
+
+            <button type="submit">Create Thumbnail</button>
+        </form>
+
+        <div class="thumbnail-preview" id="thumbnailPreview">
+            <h3>Thumbnail Preview</h3>
+            <!-- The canvas will be displayed here -->
+        </div>
+    </main>
+
+    <script>
+        const form = document.getElementById('thumbnailForm');
+        const templateSelect = document.getElementById('template');
+        const overlayText = document.getElementById('overlayText');
+        const textColor = document.getElementById('textColor');
+        const fontSize = document.getElementById('fontSize');
+        const uploadImage = document.getElementById('uploadImage');
+        const thumbnailPreview = document.getElementById('thumbnailPreview');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const template = templateSelect.value;
+            const text = overlayText.value;
+            const color = textColor.value;
+            const size = fontSize.value;
+            const imageFile = uploadImage.files[0];
+
+            createThumbnail(template, text, color, size, imageFile);
+        });
+
+        function createThumbnail(template, text, color, size, imageFile) {
+            // Clear previous thumbnail preview
+            thumbnailPreview.innerHTML = '';
+
+            // Create a canvas element
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Load the selected template
+            const templateImg = new Image();
+            templateImg.src = template;
+
+            templateImg.onload = function() {
+                // Set canvas size to template size
+                canvas.width = templateImg.width;
+                canvas.height = templateImg.height;
+
+                // Draw the template on the canvas
+                ctx.drawImage(templateImg, 0, 0);
+
+                // Add text overlay
+                ctx.font = `${size}px Arial`;
+                ctx.fillStyle = color;
+                ctx.fillText(text, 20, 50);  // Position the text on the canvas
+
+                // If image file is uploaded, overlay it onto the thumbnail
+                if (imageFile) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const logoImg = new Image();
+                        logoImg.src = e.target.result;
+
+                        logoImg.onload = function() {
+                            // Draw uploaded image onto the template (resize to fit)
+                            ctx.drawImage(logoImg, 150, 100, 100, 100); // Adjust position and size as needed
+                            updatePreview();
+                        };
+                    };
+                    reader.readAsDataURL(imageFile);
+                } else {
+                    updatePreview();
+                }
+            };
+
+            function updatePreview() {
+                // Display the canvas as a thumbnail preview
+                thumbnailPreview.appendChild(canvas);
+
+                // Provide download functionality
+                canvas.addEventListener('click', function() {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const a = document.createElement('a');
+                    a.href = dataUrl;
+                    a.download = 'custom_thumbnail.png';
+                    a.click();
+                });
+            }
+        }
+    </script>
+</body>
+</html>
